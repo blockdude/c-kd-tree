@@ -7,6 +7,9 @@
 # Unignore all directories
 !*/*
 
+# pdf
+*.pdf
+
 # test files / libs
 test-lib
 *.test.*
