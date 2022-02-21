@@ -168,7 +168,7 @@ static kd_node *kd_remove_util( kd_tree *tree, kd_node *node, int point[], int d
     }
     else
     {
-        if ( point[ axis ] >= ( node )->point[ axis ] )
+        if ( point[ axis ] >= node->point[ axis ] )
         {
             node->r = kd_remove_util( tree, node->r, point, depth + 1 );
         }
@@ -193,12 +193,12 @@ int kd_remove( kd_tree *tree, int point[] )
 
 static void **query;
 
-static int subsets( int p1[], int p2[], int range, int axis )
+static int intersects_range( int p1[], int p2[], int range, int axis )
 {
     return ( ( p1[ axis ] <= ( p2[ axis ] + range ) ) && ( p1[ axis ] >= ( p2[ axis ] - range ) ) );
 }
 
-static int intersects( int p1[], int p2[], int k, int range )
+static int overlaps_range( int p1[], int p2[], int k, int range )
 {
     int distance = 0;
     range = range * range;
@@ -212,7 +212,7 @@ static int intersects( int p1[], int p2[], int k, int range )
     return ( distance <= range );
 }
 
-static void kd_query_util( kd_tree *tree, kd_node *node, int point[], int range, int depth )
+static void kd_query_range_util( kd_tree *tree, kd_node *node, int point[], int range, int depth )
 {
     if ( node == NULL )
         return;
@@ -220,39 +220,39 @@ static void kd_query_util( kd_tree *tree, kd_node *node, int point[], int range,
     int k = tree->k;
     int axis = depth % k;
 
-    if ( intersects( node->point, point, k, range ) )
+    if ( overlaps_range( node->point, point, k, range ) )
     {
         *( query++ ) = node->item;
 
-        kd_query_util( tree, node->l, point, range, depth + 1 );
-        kd_query_util( tree, node->r, point, range, depth + 1 );
+        kd_query_range_util( tree, node->l, point, range, depth + 1 );
+        kd_query_range_util( tree, node->r, point, range, depth + 1 );
     }
-    else if ( subsets( node->point, point, range, axis ) )
+    else if ( intersects_range( node->point, point, range, axis ) )
     {
-        kd_query_util( tree, node->l, point, range, depth + 1 );
-        kd_query_util( tree, node->r, point, range, depth + 1 );
+        kd_query_range_util( tree, node->l, point, range, depth + 1 );
+        kd_query_range_util( tree, node->r, point, range, depth + 1 );
     }
     else
     {
         if ( point[ axis ] >= node->point[ axis ] )
         {
-            kd_query_util( tree, node->r, point, range, depth + 1 );
+            kd_query_range_util( tree, node->r, point, range, depth + 1 );
         }
         else
         {
-            kd_query_util( tree, node->l, point, range, depth + 1 );
+            kd_query_range_util( tree, node->l, point, range, depth + 1 );
         }
     }
 }
 
-void **kd_query( kd_tree *tree, int point[], int range )
+void **kd_query_range( kd_tree *tree, int point[], int range )
 {
     if ( tree == NULL )
         return NULL;
 
     query = ( void ** ) malloc( sizeof( void * ) * PI * range * range + 2 );
     void **head = query;
-    kd_query_util( tree, tree->root, point, range, 0 );
+    kd_query_range_util( tree, tree->root, point, range, 0 );
     *query = NULL;
     return head;
 }

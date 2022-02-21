@@ -35,7 +35,8 @@ kd_node *new_kd_node    ( int k, int point[], void *item );
 int kd_insert           ( kd_tree *tree, int point[], void *item );
 int kd_remove           ( kd_tree *tree, int point[] );
 
-void **kd_query         ( kd_tree *tree, int point[], int range );
+void **kd_query_range   ( kd_tree *tree, int point[], int range );
+void **kd_query_dim     ( kd_tree *tree, int point[], int dim[] );
 void *kd_search         ( kd_tree *tree, int point[] );
 void *kd_nearest        ( kd_tree *tree, int point[] );
 
