@@ -221,24 +221,25 @@ static void kd_query_util( kd_tree *tree, kd_node *node, int point[], int range,
     int axis = depth % k;
 
     if ( intersects( node->point, point, k, range ) )
+    {
         *( query++ ) = node->item;
-
-    if ( node->r == NULL && node->l == NULL )
-        return;
-
-    if ( node->l )
-    {
-        if ( subsets( node->l->point, point, range, axis ) )
-        {
-            kd_query_util( tree, node->l, point, range, depth + 1 );
-        }
+        kd_query_util( tree, node->l, point, range, depth + 1 );
+        kd_query_util( tree, node->r, point, range, depth + 1 );
     }
-
-    if ( node->r )
+    else if ( subsets( node->point, point, range, axis ) )
     {
-        if ( subsets( node->r->point, point, range, axis ) )
+        kd_query_util( tree, node->l, point, range, depth + 1 );
+        kd_query_util( tree, node->r, point, range, depth + 1 );
+    }
+    else
+    {
+        if ( point[ axis ] >= node->point[ axis ] )
         {
             kd_query_util( tree, node->r, point, range, depth + 1 );
+        }
+        else
+        {
+            kd_query_util( tree, node->l, point, range, depth + 1 );
         }
     }
 }
@@ -248,10 +249,10 @@ void **kd_query( kd_tree *tree, int point[], int range )
     if ( tree == NULL )
         return NULL;
 
-    query = ( void ** ) malloc( sizeof( void * ) * ( int )( PI * range * range ) + 2 );
+    query = ( void ** ) malloc( sizeof( void * ) * PI * range * range + 2 );
     void **head = query;
     kd_query_util( tree, tree->root, point, range, 0 );
-    query[0] = NULL;
+    *query = NULL;
     return head;
 }
 

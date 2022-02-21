@@ -15,8 +15,8 @@ struct kd_node
 {
     int *point;
 
-    kd_node *l;
     kd_node *r;
+    kd_node *l;
 
     void *item;
 };
@@ -26,7 +26,7 @@ struct kd_tree
     kd_node *root;
     int size;
     int k;
-    void ( *free_item )( void *item );
+    void ( *free_item )( void * );
 };
 
 kd_tree *new_kd_tree    ( int k, void ( *free_item )( void *item ) );
