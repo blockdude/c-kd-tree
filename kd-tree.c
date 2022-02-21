@@ -195,7 +195,7 @@ static void **query;
 
 static int subsets( int p1[], int p2[], int range, int axis )
 {
-    return ( ( p1[ axis ] <= ( p2[ axis ] + range ) ) && ( p1[ axis ] > ( p2[ axis ] - range ) ) );
+    return ( ( p1[ axis ] <= ( p2[ axis ] + range ) ) && ( p1[ axis ] >= ( p2[ axis ] - range ) ) );
 }
 
 static int intersects( int p1[], int p2[], int k, int range )
@@ -224,9 +224,7 @@ static void kd_query_util( kd_tree *tree, kd_node *node, int point[], int range,
     {
         *( query++ ) = node->item;
 
-        if ( node->point[ axis ] != point[ axis ] - range )
-            kd_query_util( tree, node->l, point, range, depth + 1 );
-
+        kd_query_util( tree, node->l, point, range, depth + 1 );
         kd_query_util( tree, node->r, point, range, depth + 1 );
     }
     else if ( subsets( node->point, point, range, axis ) )
