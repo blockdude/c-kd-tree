@@ -8,38 +8,9 @@
 #ifndef KD_TREE
 #define KD_TREE
 
-typedef struct kd_node kd_node;
 typedef struct kd_tree kd_tree;
-
-struct kd_node
-{
-    int *point;
-
-    // used for kd tree
-    kd_node *r;
-    kd_node *l;
-
-    // used for linked list
-    kd_node *n;
-
-    void *item;
-};
-
-struct kd_tree
-{
-    kd_node *root;
-
-    int size;
-    int k;
-
-    void ( *free_item )( void * );
-};
-
-struct kd_result
-{
-    kd_node *head;
-    int length;
-};
+typedef struct kd_result kd_result;
+typedef struct kd_node kd_node;
 
 kd_tree *new_kd_tree    ( int k, void ( *free_item )( void *item ) );
 kd_node *new_kd_node    ( int k, int point[], void *item );

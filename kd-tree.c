@@ -3,6 +3,36 @@
 
 #define PI 3.1415926535897932384626433832795f
 
+struct kd_node
+{
+    int *point;
+
+    // used for kd tree
+    kd_node *r;
+    kd_node *l;
+
+    // used for linked list
+    kd_node *n;
+
+    void *item;
+};
+
+struct kd_tree
+{
+    kd_node *root;
+
+    int size;
+    int k;
+
+    void ( *free_item )( void * );
+};
+
+struct kd_result
+{
+    kd_node *head;
+    int length;
+};
+
 static int ptcmp( int pt_a[], int pt_b[], int k )
 {
     for ( int i = 0; i < k; i++ )
