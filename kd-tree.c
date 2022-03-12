@@ -7,12 +7,8 @@ struct kd_node
 {
     int *point;
 
-    // used for kd tree
     kd_node *r;
     kd_node *l;
-
-    // used for linked list
-    kd_node *n;
 
     void *item;
 };
@@ -78,11 +74,11 @@ kd_node *new_kd_node( int k, int point[], void *item )
         return NULL;
     }
 
-    for ( int i = 0; i < k; i++ ) node->point[ i ] = point[ i ];
+    for ( int i = 0; i < k; i++ )
+        node->point[ i ] = point[ i ];
 
     node->r = NULL;
     node->l = NULL;
-    node->n = NULL;
     node->item = item;
 
     return node;
@@ -296,19 +292,23 @@ void **kd_query_range( kd_tree *tree, int point[], int range, int *length )
 
     query = ( void ** ) malloc( sizeof( void * ) * PI * range * range + 2 );
     void **head = query;
-    *length = kd_query_range_util( tree, tree->root, point, range, 0 );
+    int l = kd_query_range_util( tree, tree->root, point, range, 0 );
+
+    if ( length )
+        *length = l;
+
     return head;
 }
 
 static int intersects_dim( int pt_a[], int pt_b[], int dim[], int axis )
 {
-    return ( ( pt_a[ axis ] <= pt_b[ axis ] ) && ( pt_a[ axis ] >= ( pt_b[ axis ] - dim[ axis ] ) ) );
+    return ( ( pt_a[ axis ] >= pt_b[ axis ] ) && ( pt_a[ axis ] <= ( pt_b[ axis ] + dim[ axis ] ) ) );
 }
 
 static int overlaps_dim( int pt_a[], int pt_b[], int dim[], int k )
 {
     for ( int i = 0; i < k; i++ )
-        if ( ( pt_a[ i ] > pt_b[ i ] ) || ( pt_a[ i ] < ( pt_b[ i ] - dim[ i ] ) ) )
+        if ( ( pt_a[ i ] < pt_b[ i ] ) || ( pt_a[ i ] > ( pt_b[ i ] + dim[ i ] ) ) )
             return 0;
 
     return 1;
@@ -362,7 +362,11 @@ void **kd_query_dim( kd_tree *tree, int point[], int dim[], int *length )
 
     query = ( void ** ) malloc( sizeof( void * ) * area + 1 );
     void **head = query;
-    *length = kd_query_dim_util( tree, tree->root, point, dim, 0 );
+    int l = kd_query_dim_util( tree, tree->root, point, dim, 0 );
+
+    if ( length )
+        *length = l;
+
     return head;
 }
 
