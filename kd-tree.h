@@ -23,8 +23,8 @@ int kd_remove           ( kd_tree *tree, int point[] );
 void *kd_pull           ( kd_tree *tree, int point[] );
 
 // query tools
-void **kd_query_range   ( kd_tree *tree, int point[], int range ,int *length );
-void **kd_query_dim     ( kd_tree *tree, int point[], int dim[] ,int *length );
+void **kd_query_range   ( kd_tree *tree, int point[], int range, int *length );
+void **kd_query_dim     ( kd_tree *tree, int point[], int dim[], int *length );
 
 // search tools
 void *kd_search         ( kd_tree *tree, int point[] );

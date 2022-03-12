@@ -393,7 +393,7 @@ void **kd_query_range( kd_tree *tree, int point[], int range, int *length )
         head = NULL;
     }
 
-    if ( length )
+    if ( length != NULL )
         *length = l;
 
     return head;
@@ -407,7 +407,7 @@ static int intersects_dim( int pt_a[], int pt_b[], int dim[], int axis )
 static int overlaps_dim( int pt_a[], int pt_b[], int dim[], int k )
 {
     for ( int i = 0; i < k; i++ )
-        if ( ( pt_a[ i ] < pt_b[ i ] ) || ( pt_a[ i ] > ( pt_b[ i ] + dim[ i ] ) ) )
+        if ( ( pt_a[ i ] < pt_b[ i ] ) || ( pt_a[ i ] >= ( pt_b[ i ] + dim[ i ] ) ) )
             return 0;
 
     return 1;
@@ -473,7 +473,7 @@ void **kd_query_dim( kd_tree *tree, int point[], int dim[], int *length )
         head = NULL;
     }
 
-    if ( length )
+    if ( length != NULL )
         *length = l;
 
     return head;
