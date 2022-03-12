@@ -265,13 +265,13 @@ static kd_node *kd_pull_util( kd_tree *tree, kd_node *node, int point[], int dep
         {
             kd_node *min = find_min( node->r, k, axis, depth + 1 );
             swap_and_copy( node, min, k );
-            node->r = kd_remove_util( tree, node->r, node->point, depth + 1 );
+            node->r = kd_pull_util( tree, node->r, node->point, depth + 1, result );
         }
         else if ( node->l != NULL )
         {
             kd_node *min = find_min( node->l, k, axis, depth + 1 );
             swap_and_copy( node, min, k );
-            node->r = kd_remove_util( tree, node->l, node->point, depth + 1 );
+            node->r = kd_pull_util( tree, node->l, node->point, depth + 1, result );
             node->l = NULL;
         }
         else
@@ -288,18 +288,18 @@ static kd_node *kd_pull_util( kd_tree *tree, kd_node *node, int point[], int dep
     {
         if ( point[ axis ] >= node->point[ axis ] )
         {
-            node->r = kd_remove_util( tree, node->r, point, depth + 1 );
+            node->r = kd_pull_util( tree, node->r, point, depth + 1, result );
         }
         else
         {
-            node->l = kd_remove_util( tree, node->l, point, depth + 1 );
+            node->l = kd_pull_util( tree, node->l, point, depth + 1, result );
         }
     }
 
     return node;
 }
 
-// pull just removes the node from tree but does not free the item at the node and instead returns it
+// pull just removes the node from tree and returns the item at that node
 void *kd_pull( kd_tree *tree, int point[] )
 {
     if ( tree == NULL )
@@ -382,7 +382,16 @@ void **kd_query_range( kd_tree *tree, int point[], int range, int *length )
     query = ( void ** ) malloc( sizeof( void * ) * PI * range * range + 2 );
     void **head = query;
     int l = kd_query_range_util( tree, tree->root, point, range, 0 );
-    head = ( void ** ) realloc( head, l );
+
+    if ( l > 0 )
+    {
+        head = ( void ** ) realloc( head, sizeof( void * ) * l );
+    }
+    else
+    {
+        free( head );
+        head = NULL;
+    }
 
     if ( length )
         *length = l;
@@ -453,7 +462,16 @@ void **kd_query_dim( kd_tree *tree, int point[], int dim[], int *length )
     query = ( void ** ) malloc( sizeof( void * ) * area + 1 );
     void **head = query;
     int l = kd_query_dim_util( tree, tree->root, point, dim, 0 );
-    head = ( void ** ) realloc( head, sizeof( void * ) * l );
+
+    if ( l > 0 )
+    {
+        head = ( void ** ) realloc( head, sizeof( void * ) * l );
+    }
+    else
+    {
+        free( head );
+        head = NULL;
+    }
 
     if ( length )
         *length = l;
