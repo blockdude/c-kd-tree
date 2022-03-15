@@ -9,9 +9,8 @@
 #define KD_TREE
 
 typedef struct kd_tree kd_tree;
-typedef struct kd_result kd_result;
 
-kd_tree *new_kd_tree    ( int k, void ( *free_item )( void *item ) );
+kd_tree *new_kd_tree    ( int k, void ( *free_item )( void * ) );
 
 // getters
 int kd_size             ( kd_tree *tree );
@@ -19,7 +18,7 @@ int kd_dim              ( kd_tree *tree );
 
 // build tools
 int kd_insert           ( kd_tree *tree, int point[], void *item );
-int kd_remove           ( kd_tree *tree, int point[] );
+int kd_delete           ( kd_tree *tree, int point[] );
 void *kd_pull           ( kd_tree *tree, int point[] );
 
 // query tools
