@@ -17,9 +17,10 @@ int kd_size             ( kd_tree *tree );
 int kd_dim              ( kd_tree *tree );
 
 // build tools
-int kd_insert           ( kd_tree *tree, int point[], void *item );
+void *kd_replace        ( kd_tree *tree, int point[], void *item );
+void *kd_insert         ( kd_tree *tree, int point[], void *item );
+void *kd_remove         ( kd_tree *tree, int point[] );
 int kd_delete           ( kd_tree *tree, int point[] );
-void *kd_pull           ( kd_tree *tree, int point[] );
 
 // query tools
 void **kd_query_range   ( kd_tree *tree, int point[], int range, int *length );
