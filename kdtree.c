@@ -1,23 +1,23 @@
 #include <stdlib.h>
-#include "kd-tree.h"
+#include "kdtree.h"
 
 #define PI 3.1415926535897932384626433832795f
 
-typedef struct kd_node kd_node;
+typedef struct kdt_node kdt_node;
 
-struct kd_node
+struct kdt_node
 {
     KD_DATA_TYPE *point;
 
-    kd_node *r;
-    kd_node *l;
+    kdt_node *r;
+    kdt_node *l;
 
     void *item;
 };
 
-struct kd_tree
+struct kdtree
 {
-    kd_node *root;
+    kdt_node *root;
 
     int size;
     int k;
@@ -39,13 +39,13 @@ static int ptcmp( KD_DATA_TYPE pt_a[], KD_DATA_TYPE pt_b[], int k )
  * new kd tree
  */
 
-kd_tree *new_kd_tree( int k, void ( *free_item )( void * ) )
+kdtree *new_kdtree( int k, void ( *free_item )( void * ) )
 {
     // sanity check
     if ( k < 2 )
         return NULL;
 
-    kd_tree *tree = ( kd_tree * ) malloc( sizeof( kd_tree ) );
+    kdtree *tree = ( kdtree * ) malloc( sizeof( kdtree ) );
 
     if ( tree == NULL )
         return NULL;
@@ -59,12 +59,44 @@ kd_tree *new_kd_tree( int k, void ( *free_item )( void * ) )
     return tree;
 }
 
-static kd_node *new_kd_node( int k, KD_DATA_TYPE point[], void *item )
+/*
+ * free memory
+ */
+
+static void kdt_free_util( kdtree *tree, kdt_node *node )
+{
+    if ( node == NULL )
+        return;
+
+    kdt_free_util( tree, node->r );
+    kdt_free_util( tree, node->l );
+
+    if ( tree->free_item )
+        tree->free_item( node->item );
+
+    free( node->point );
+    free( node );
+}
+
+void free_kdtree( kdtree *tree )
+{
+    if ( tree == NULL )
+        return;
+
+    kdt_free_util( tree, tree->root );
+    free( tree );
+}
+
+/*
+ * new node
+ */
+
+static kdt_node *new_kdt_node( int k, KD_DATA_TYPE point[], void *item )
 {
     if ( k < 2 )
         return NULL;
 
-    kd_node *node = ( kd_node * ) malloc( sizeof( kd_node ) );
+    kdt_node *node = ( kdt_node * ) malloc( sizeof( kdt_node ) );
 
     if ( node == NULL )
         return NULL;
@@ -91,12 +123,12 @@ static kd_node *new_kd_node( int k, KD_DATA_TYPE point[], void *item )
  * getter functions
  */
 
-int kd_size( kd_tree *tree )
+int kdt_size( kdtree *tree )
 {
     return tree->size;
 }
 
-int kd_dim( kd_tree *tree )
+int kdt_dim( kdtree *tree )
 {
     return tree->k;
 }
@@ -105,14 +137,14 @@ int kd_dim( kd_tree *tree )
  * insert remove
  */
 
-static kd_node *kd_replace_util( kd_tree *tree, kd_node *node, KD_DATA_TYPE point[], void *item, int depth, void **result )
+static kdt_node *kdt_replace_util( kdtree *tree, kdt_node *node, KD_DATA_TYPE point[], void *item, int depth, void **result )
 {
     int k = tree->k;
     int axis = depth % k;
 
     if ( node == NULL )
     {
-        node = new_kd_node( k, point, item );
+        node = new_kdt_node( k, point, item );
         *result = item;
         tree->size++;
     }
@@ -127,35 +159,35 @@ static kd_node *kd_replace_util( kd_tree *tree, kd_node *node, KD_DATA_TYPE poin
         // go right or left depending on depth and point
         if ( point[ axis ] >= node->point[ axis ] )
         {
-            node->r = kd_replace_util( tree, node->r, point, item, depth + 1, result );
+            node->r = kdt_replace_util( tree, node->r, point, item, depth + 1, result );
         }
         else
         {
-            node->l = kd_replace_util( tree, node->l, point, item, depth + 1, result );
+            node->l = kdt_replace_util( tree, node->l, point, item, depth + 1, result );
         }
     }
 
     return node;
 }
 
-void *kd_replace( kd_tree *tree, KD_DATA_TYPE point[], void *item )
+void *kdt_replace( kdtree *tree, KD_DATA_TYPE point[], void *item )
 {
     if ( tree == NULL )
         return NULL;
 
     void *result = NULL;
-    tree->root = kd_replace_util( tree, tree->root, point, item, 0, &result );
+    tree->root = kdt_replace_util( tree, tree->root, point, item, 0, &result );
     return result;
 }
 
-static kd_node *kd_insert_util( kd_tree *tree, kd_node *node, KD_DATA_TYPE point[], void *item, int depth, void **result )
+static kdt_node *kdt_insert_util( kdtree *tree, kdt_node *node, KD_DATA_TYPE point[], void *item, int depth, void **result )
 {
     int k = tree->k;
     int axis = depth % k;
 
     if ( node == NULL )
     {
-        node = new_kd_node( k, point, item );
+        node = new_kdt_node( k, point, item );
         *result = item;
         tree->size++;
     }
@@ -168,29 +200,29 @@ static kd_node *kd_insert_util( kd_tree *tree, kd_node *node, KD_DATA_TYPE point
         // go right or left depending on depth and point
         if ( point[ axis ] >= node->point[ axis ] )
         {
-            node->r = kd_insert_util( tree, node->r, point, item, depth + 1, result );
+            node->r = kdt_insert_util( tree, node->r, point, item, depth + 1, result );
         }
         else
         {
-            node->l = kd_insert_util( tree, node->l, point, item, depth + 1, result );
+            node->l = kdt_insert_util( tree, node->l, point, item, depth + 1, result );
         }
     }
 
     return node;
 }
 
-void *kd_insert( kd_tree *tree, KD_DATA_TYPE point[], void *item )
+void *kdt_insert( kdtree *tree, KD_DATA_TYPE point[], void *item )
 {
     if ( tree == NULL )
         return NULL;
 
     void *result = NULL;
-    tree->root = kd_insert_util( tree, tree->root, point, item, 0, &result );
+    tree->root = kdt_insert_util( tree, tree->root, point, item, 0, &result );
     return result;
 }
 
 // swap item in node. copy point dst to src
-static void swap_and_copy( kd_node *dst, kd_node *src, int k )
+static void swap_and_copy( kdt_node *dst, kdt_node *src, int k )
 {
     void *item = dst->item;
 
@@ -201,9 +233,9 @@ static void swap_and_copy( kd_node *dst, kd_node *src, int k )
         dst->point[ i ] = src->point[ i ];
 }
 
-static kd_node *min_node( kd_node *x, kd_node *y, kd_node *z, int axis )
+static kdt_node *min_node( kdt_node *x, kdt_node *y, kdt_node *z, int axis )
 {
-    kd_node *res = x;
+    kdt_node *res = x;
     if ( y != NULL && y->point[ axis ] < res->point[ axis ] )
         res = y;
     if ( z != NULL && z->point[ axis ] < res->point[ axis ] )
@@ -211,7 +243,7 @@ static kd_node *min_node( kd_node *x, kd_node *y, kd_node *z, int axis )
     return res;
 }
 
-static kd_node *find_min( kd_node *node, int k, int axis, int depth )
+static kdt_node *find_min( kdt_node *node, int k, int axis, int depth )
 {
     if ( node == NULL )
         return NULL;
@@ -232,7 +264,7 @@ static kd_node *find_min( kd_node *node, int k, int axis, int depth )
             axis );
 }
 
-static kd_node *kd_delete_util( kd_tree *tree, kd_node *node, KD_DATA_TYPE point[], int depth )
+static kdt_node *kdt_delete_util( kdtree *tree, kdt_node *node, KD_DATA_TYPE point[], int depth )
 {
     if ( node == NULL )
         return NULL;
@@ -244,17 +276,17 @@ static kd_node *kd_delete_util( kd_tree *tree, kd_node *node, KD_DATA_TYPE point
     {
         if ( node->r != NULL )
         {
-            kd_node *min = find_min( node->r, k, axis, depth + 1 );
+            kdt_node *min = find_min( node->r, k, axis, depth + 1 );
             swap_and_copy( node, min, k );
-            node->r = kd_delete_util( tree, node->r, node->point, depth + 1 );
+            node->r = kdt_delete_util( tree, node->r, node->point, depth + 1 );
         }
         else if ( node->l != NULL )
         {
-            kd_node *min = find_min( node->l, k, axis, depth + 1 );
+            kdt_node *min = find_min( node->l, k, axis, depth + 1 );
             swap_and_copy( node, min, k );
 
             // when right is null we need to move left item to the right
-            node->r = kd_delete_util( tree, node->l, node->point, depth + 1 );
+            node->r = kdt_delete_util( tree, node->l, node->point, depth + 1 );
             node->l = NULL;
         }
         else
@@ -272,28 +304,28 @@ static kd_node *kd_delete_util( kd_tree *tree, kd_node *node, KD_DATA_TYPE point
     {
         if ( point[ axis ] >= node->point[ axis ] )
         {
-            node->r = kd_delete_util( tree, node->r, point, depth + 1 );
+            node->r = kdt_delete_util( tree, node->r, point, depth + 1 );
         }
         else
         {
-            node->l = kd_delete_util( tree, node->l, point, depth + 1 );
+            node->l = kdt_delete_util( tree, node->l, point, depth + 1 );
         }
     }
 
     return node;
 }
 
-int kd_delete( kd_tree *tree, KD_DATA_TYPE point[] )
+int kdt_delete( kdtree *tree, KD_DATA_TYPE point[] )
 {
     if ( tree == NULL )
         return -1;
 
     int size = tree->size;
-    tree->root = kd_delete_util( tree, tree->root, point, 0 );
+    tree->root = kdt_delete_util( tree, tree->root, point, 0 );
     return ( size != tree->size );
 }
 
-static kd_node *kd_remove_util( kd_tree *tree, kd_node *node, KD_DATA_TYPE point[], int depth, void **result )
+static kdt_node *kdt_remove_util( kdtree *tree, kdt_node *node, KD_DATA_TYPE point[], int depth, void **result )
 {
     if ( node == NULL )
         return NULL;
@@ -305,15 +337,15 @@ static kd_node *kd_remove_util( kd_tree *tree, kd_node *node, KD_DATA_TYPE point
     {
         if ( node->r != NULL )
         {
-            kd_node *min = find_min( node->r, k, axis, depth + 1 );
+            kdt_node *min = find_min( node->r, k, axis, depth + 1 );
             swap_and_copy( node, min, k );
-            node->r = kd_remove_util( tree, node->r, node->point, depth + 1, result );
+            node->r = kdt_remove_util( tree, node->r, node->point, depth + 1, result );
         }
         else if ( node->l != NULL )
         {
-            kd_node *min = find_min( node->l, k, axis, depth + 1 );
+            kdt_node *min = find_min( node->l, k, axis, depth + 1 );
             swap_and_copy( node, min, k );
-            node->r = kd_remove_util( tree, node->l, node->point, depth + 1, result );
+            node->r = kdt_remove_util( tree, node->l, node->point, depth + 1, result );
             node->l = NULL;
         }
         else
@@ -330,11 +362,11 @@ static kd_node *kd_remove_util( kd_tree *tree, kd_node *node, KD_DATA_TYPE point
     {
         if ( point[ axis ] >= node->point[ axis ] )
         {
-            node->r = kd_remove_util( tree, node->r, point, depth + 1, result );
+            node->r = kdt_remove_util( tree, node->r, point, depth + 1, result );
         }
         else
         {
-            node->l = kd_remove_util( tree, node->l, point, depth + 1, result );
+            node->l = kdt_remove_util( tree, node->l, point, depth + 1, result );
         }
     }
 
@@ -342,13 +374,13 @@ static kd_node *kd_remove_util( kd_tree *tree, kd_node *node, KD_DATA_TYPE point
 }
 
 // pull just removes the node from tree and returns the item at that node
-void *kd_remove( kd_tree *tree, KD_DATA_TYPE point[] )
+void *kdt_remove( kdtree *tree, KD_DATA_TYPE point[] )
 {
     if ( tree == NULL )
         return NULL;
 
     void *item = NULL;
-    tree->root = kd_remove_util( tree, tree->root, point, 0, &item );
+    tree->root = kdt_remove_util( tree, tree->root, point, 0, &item );
     return item;
 }
 
@@ -375,7 +407,7 @@ static int overlaps_range( KD_DATA_TYPE pt_a[], KD_DATA_TYPE pt_b[], KD_DATA_TYP
     return ( distance <= range );
 }
 
-static int kd_query_range_util( kd_tree *tree, kd_node *node, KD_DATA_TYPE point[], KD_DATA_TYPE range, int depth, void ***query )
+static int kdt_query_range_util( kdtree *tree, kdt_node *node, KD_DATA_TYPE point[], KD_DATA_TYPE range, int depth, void ***query )
 {
     if ( node == NULL )
         return 0;
@@ -390,40 +422,40 @@ static int kd_query_range_util( kd_tree *tree, kd_node *node, KD_DATA_TYPE point
         *( ( *query )++ ) = node->item;
 
         // if it overlaps that means more points could be on the right and/or left
-        result += kd_query_range_util( tree, node->l, point, range, depth + 1, query );
-        result += kd_query_range_util( tree, node->r, point, range, depth + 1, query );
+        result += kdt_query_range_util( tree, node->l, point, range, depth + 1, query );
+        result += kdt_query_range_util( tree, node->r, point, range, depth + 1, query );
         result++;
     }
     else if ( intersects_range( node->point, point, range, axis ) )
     {
         // if the point intersects at the correct axis then more points could be on the right and/or left
-        result += kd_query_range_util( tree, node->l, point, range, depth + 1, query );
-        result += kd_query_range_util( tree, node->r, point, range, depth + 1, query );
+        result += kdt_query_range_util( tree, node->l, point, range, depth + 1, query );
+        result += kdt_query_range_util( tree, node->r, point, range, depth + 1, query );
     }
     else
     {
         // nothing was found keep looking
         if ( point[ axis ] >= node->point[ axis ] )
         {
-            result += kd_query_range_util( tree, node->r, point, range, depth + 1, query );
+            result += kdt_query_range_util( tree, node->r, point, range, depth + 1, query );
         }
         else
         {
-            result += kd_query_range_util( tree, node->l, point, range, depth + 1, query );
+            result += kdt_query_range_util( tree, node->l, point, range, depth + 1, query );
         }
     }
 
     return result;
 }
 
-void **kd_query_range( kd_tree *tree, KD_DATA_TYPE point[], KD_DATA_TYPE range, int *length )
+void **kdt_query_range( kdtree *tree, KD_DATA_TYPE point[], KD_DATA_TYPE range, int *length )
 {
     if ( tree == NULL )
         return NULL;
 
     void **query = ( void ** ) malloc( sizeof( void * ) * PI * range * range + 2 );
     void **head = query;
-    int l = kd_query_range_util( tree, tree->root, point, range, 0, &query );
+    int l = kdt_query_range_util( tree, tree->root, point, range, 0, &query );
 
     if ( l > 0 )
     {
@@ -455,7 +487,7 @@ static int overlaps_dim( KD_DATA_TYPE pt_a[], KD_DATA_TYPE pt_b[], KD_DATA_TYPE 
     return 1;
 }
 
-static int kd_query_dim_util( kd_tree *tree, kd_node *node, KD_DATA_TYPE point[], KD_DATA_TYPE dim[], int depth, void ***query )
+static int kdt_query_dim_util( kdtree *tree, kdt_node *node, KD_DATA_TYPE point[], KD_DATA_TYPE dim[], int depth, void ***query )
 {
     if ( node == NULL )
         return 0;
@@ -467,31 +499,31 @@ static int kd_query_dim_util( kd_tree *tree, kd_node *node, KD_DATA_TYPE point[]
     if ( overlaps_dim( node->point, point, dim, k ) )
     {
         *( ( *query )++ ) = node->item;
-        result += kd_query_dim_util( tree, node->l, point, dim, depth + 1, query );
-        result += kd_query_dim_util( tree, node->r, point, dim, depth + 1, query );
+        result += kdt_query_dim_util( tree, node->l, point, dim, depth + 1, query );
+        result += kdt_query_dim_util( tree, node->r, point, dim, depth + 1, query );
         result++;
     }
     else if ( intersects_dim( node->point, point, dim, axis ) )
     {
-        result += kd_query_dim_util( tree, node->l, point, dim, depth + 1, query );
-        result += kd_query_dim_util( tree, node->r, point, dim, depth + 1, query );
+        result += kdt_query_dim_util( tree, node->l, point, dim, depth + 1, query );
+        result += kdt_query_dim_util( tree, node->r, point, dim, depth + 1, query );
     }
     else
     {
         if ( point[ axis ] >= node->point[ axis ] )
         {
-            result += kd_query_dim_util( tree, node->r, point, dim, depth + 1, query );
+            result += kdt_query_dim_util( tree, node->r, point, dim, depth + 1, query );
         }
         else
         {
-            result += kd_query_dim_util( tree, node->l, point, dim, depth + 1, query );
+            result += kdt_query_dim_util( tree, node->l, point, dim, depth + 1, query );
         }
     }
 
     return result;
 }
 
-void **kd_query_dim( kd_tree *tree, KD_DATA_TYPE point[], KD_DATA_TYPE dim[], int *length )
+void **kdt_query_dim( kdtree *tree, KD_DATA_TYPE point[], KD_DATA_TYPE dim[], int *length )
 {
     if ( tree == NULL )
         return NULL;
@@ -503,7 +535,7 @@ void **kd_query_dim( kd_tree *tree, KD_DATA_TYPE point[], KD_DATA_TYPE dim[], in
 
     void **query = ( void ** ) malloc( sizeof( void * ) * area + 1 );
     void **head = query;
-    int l = kd_query_dim_util( tree, tree->root, point, dim, 0, &query );
+    int l = kdt_query_dim_util( tree, tree->root, point, dim, 0, &query );
 
     if ( l > 0 )
     {
@@ -525,7 +557,7 @@ void **kd_query_dim( kd_tree *tree, KD_DATA_TYPE point[], KD_DATA_TYPE dim[], in
  * search
  */
 
-static kd_node *kd_search_util( kd_tree *tree, kd_node *node, KD_DATA_TYPE point[], int depth )
+static kdt_node *kdt_search_util( kdtree *tree, kdt_node *node, KD_DATA_TYPE point[], int depth )
 {
     if ( node == NULL )
         return NULL;
@@ -539,47 +571,19 @@ static kd_node *kd_search_util( kd_tree *tree, kd_node *node, KD_DATA_TYPE point
 
     if ( point[ axis ] >= node->point[ axis ] )
     {
-        return kd_search_util( tree, node->r, point, depth + 1 );
+        return kdt_search_util( tree, node->r, point, depth + 1 );
     }
     else
     {
-        return kd_search_util( tree, node->l, point, depth + 1 );
+        return kdt_search_util( tree, node->l, point, depth + 1 );
     }
 }
 
-void *kd_search( kd_tree *tree, KD_DATA_TYPE point[] )
+void *kdt_search( kdtree *tree, KD_DATA_TYPE point[] )
 {
     if ( tree == NULL )
         return NULL;
 
-    kd_node *res = kd_search_util( tree, tree->root, point, 0 );
+    kdt_node *res = kdt_search_util( tree, tree->root, point, 0 );
     return res == NULL ? NULL : res->item;
-}
-
-/*
- * free memory
- */
-
-static void kd_free_util( kd_tree *tree, kd_node *node )
-{
-    if ( node == NULL )
-        return;
-
-    kd_free_util( tree, node->r );
-    kd_free_util( tree, node->l );
-
-    if ( tree->free_item )
-        tree->free_item( node->item );
-
-    free( node->point );
-    free( node );
-}
-
-void kd_free( kd_tree *tree )
-{
-    if ( tree == NULL )
-        return;
-
-    kd_free_util( tree, tree->root );
-    free( tree );
 }
