@@ -26,7 +26,7 @@ struct kdtree
 };
 
 // check if two points are the same
-static int ptcmp( KDT_DATA_TYPE pt_a[], KD_DATA_TYPE pt_b[], int k )
+static int ptcmp( KDT_DATA_TYPE pt_a[], KDT_DATA_TYPE pt_b[], int k )
 {
     for ( int i = 0; i < k; i++ )
         if ( pt_a[ i ] != pt_b[ i ] )
@@ -101,7 +101,7 @@ static kdt_node *new_kdt_node( int k, KDT_DATA_TYPE point[], void *item )
     if ( node == NULL )
         return NULL;
 
-    node->point = ( KDT_DATA_TYPE * ) malloc( sizeof( KD_DATA_TYPE ) * k );
+    node->point = ( KDT_DATA_TYPE * ) malloc( sizeof( KDT_DATA_TYPE ) * k );
 
     if ( node->point == NULL)
     {
@@ -388,12 +388,12 @@ void *kdt_remove( kdtree *tree, KDT_DATA_TYPE point[] )
  * query
  */
 
-static int intersects_range( KDT_DATA_TYPE pt_a[], KD_DATA_TYPE pt_b[], KD_DATA_TYPE range, int axis )
+static int intersects_range( KDT_DATA_TYPE pt_a[], KDT_DATA_TYPE pt_b[], KDT_DATA_TYPE range, int axis )
 {
     return ( ( pt_a[ axis ] <= ( pt_b[ axis ] + range ) ) && ( pt_a[ axis ] >= ( pt_b[ axis ] - range ) ) );
 }
 
-static int overlaps_range( KDT_DATA_TYPE pt_a[], KD_DATA_TYPE pt_b[], KD_DATA_TYPE range, int k )
+static int overlaps_range( KDT_DATA_TYPE pt_a[], KDT_DATA_TYPE pt_b[], KDT_DATA_TYPE range, int k )
 {
     KDT_DATA_TYPE distance = 0;
     range = range * range;
@@ -407,7 +407,7 @@ static int overlaps_range( KDT_DATA_TYPE pt_a[], KD_DATA_TYPE pt_b[], KD_DATA_TY
     return ( distance <= range );
 }
 
-static int kdt_query_range_util( kdtree *tree, kdt_node *node, KDT_DATA_TYPE point[], KD_DATA_TYPE range, int depth, void ***query )
+static int kdt_query_range_util( kdtree *tree, kdt_node *node, KDT_DATA_TYPE point[], KDT_DATA_TYPE range, int depth, void ***query )
 {
     if ( node == NULL )
         return 0;
@@ -448,7 +448,7 @@ static int kdt_query_range_util( kdtree *tree, kdt_node *node, KDT_DATA_TYPE poi
     return result;
 }
 
-void **kdt_query_range( kdtree *tree, KDT_DATA_TYPE point[], KD_DATA_TYPE range, int *length )
+void **kdt_query_range( kdtree *tree, KDT_DATA_TYPE point[], KDT_DATA_TYPE range, int *length )
 {
     if ( tree == NULL )
         return NULL;
@@ -473,12 +473,12 @@ void **kdt_query_range( kdtree *tree, KDT_DATA_TYPE point[], KD_DATA_TYPE range,
     return head;
 }
 
-static int intersects_dim( KDT_DATA_TYPE pt_a[], KD_DATA_TYPE pt_b[], KD_DATA_TYPE dim[], int axis )
+static int intersects_dim( KDT_DATA_TYPE pt_a[], KDT_DATA_TYPE pt_b[], KDT_DATA_TYPE dim[], int axis )
 {
     return ( ( pt_a[ axis ] >= pt_b[ axis ] ) && ( pt_a[ axis ] <= ( pt_b[ axis ] + dim[ axis ] ) ) );
 }
 
-static int overlaps_dim( KDT_DATA_TYPE pt_a[], KD_DATA_TYPE pt_b[], KD_DATA_TYPE dim[], int k )
+static int overlaps_dim( KDT_DATA_TYPE pt_a[], KDT_DATA_TYPE pt_b[], KDT_DATA_TYPE dim[], int k )
 {
     for ( int i = 0; i < k; i++ )
         if ( ( pt_a[ i ] < pt_b[ i ] ) || ( pt_a[ i ] >= ( pt_b[ i ] + dim[ i ] ) ) )
@@ -487,7 +487,7 @@ static int overlaps_dim( KDT_DATA_TYPE pt_a[], KD_DATA_TYPE pt_b[], KD_DATA_TYPE
     return 1;
 }
 
-static int kdt_query_dim_util( kdtree *tree, kdt_node *node, KDT_DATA_TYPE point[], KD_DATA_TYPE dim[], int depth, void ***query )
+static int kdt_query_dim_util( kdtree *tree, kdt_node *node, KDT_DATA_TYPE point[], KDT_DATA_TYPE dim[], int depth, void ***query )
 {
     if ( node == NULL )
         return 0;
@@ -523,7 +523,7 @@ static int kdt_query_dim_util( kdtree *tree, kdt_node *node, KDT_DATA_TYPE point
     return result;
 }
 
-void **kdt_query_dim( kdtree *tree, KDT_DATA_TYPE point[], KD_DATA_TYPE dim[], int *length )
+void **kdt_query_dim( kdtree *tree, KDT_DATA_TYPE point[], KDT_DATA_TYPE dim[], int *length )
 {
     if ( tree == NULL )
         return NULL;

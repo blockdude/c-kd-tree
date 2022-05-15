@@ -28,8 +28,8 @@ void *kdt_remove        ( kdtree *tree, KDT_DATA_TYPE point[] );
 int kdt_delete          ( kdtree *tree, KDT_DATA_TYPE point[] );
 
 // query tools
-void **kdt_query_range  ( kdtree *tree, KDT_DATA_TYPE point[], KD_DATA_TYPE range, int *length );
-void **kdt_query_dim    ( kdtree *tree, KDT_DATA_TYPE point[], KD_DATA_TYPE dim[], int *length );
+void **kdt_query_range  ( kdtree *tree, KDT_DATA_TYPE point[], KDT_DATA_TYPE range, int *length );
+void **kdt_query_dim    ( kdtree *tree, KDT_DATA_TYPE point[], KDT_DATA_TYPE dim[], int *length );
 
 // search tools
 void *kdt_search        ( kdtree *tree, KDT_DATA_TYPE point[] );
