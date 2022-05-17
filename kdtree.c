@@ -407,6 +407,52 @@ static int overlaps_range( KDT_DATA_TYPE pt_a[], KDT_DATA_TYPE pt_b[], KDT_DATA_
     return ( distance <= range );
 }
 
+static void kdt_query_range_func_util( kdtree *tree, kdt_node *node, KDT_DATA_TYPE point[], KDT_DATA_TYPE range, int depth, void ( *func )( void * ) )
+{
+    if ( node == NULL )
+        return;
+
+    int k = tree->k;
+    int axis = depth % k;
+
+    if ( overlaps_range( node->point, point, range, k ) )
+    {
+        // do function if node overlaps
+        func( node->item );
+
+        // if it overlaps that means more points could be on the right and/or left
+        kdt_query_range_func_util( tree, node->l, point, range, depth + 1, func );
+        kdt_query_range_func_util( tree, node->r, point, range, depth + 1, func );
+    }
+    else if ( intersects_range( node->point, point, range, axis ) )
+    {
+        // if the point intersects at the correct axis then more points could be on the right and/or left
+        kdt_query_range_func_util( tree, node->l, point, range, depth + 1, func );
+        kdt_query_range_func_util( tree, node->r, point, range, depth + 1, func );
+    }
+    else
+    {
+        // nothing was found keep looking
+        if ( point[ axis ] >= node->point[ axis ] )
+        {
+            kdt_query_range_func_util( tree, node->r, point, range, depth + 1, func );
+        }
+        else
+        {
+            kdt_query_range_func_util( tree, node->l, point, range, depth + 1, func );
+        }
+    }
+}
+
+
+void kdt_query_range_func( kdtree *tree, KDT_DATA_TYPE point[], KDT_DATA_TYPE range, void ( *func )( void * ) )
+{
+    if ( tree == NULL )
+        return;
+
+    kdt_query_range_func_util( tree, tree->root, point, range, 0, func );
+}
+
 static int kdt_query_range_util( kdtree *tree, kdt_node *node, KDT_DATA_TYPE point[], KDT_DATA_TYPE range, int depth, void ***query )
 {
     if ( node == NULL )
@@ -485,6 +531,46 @@ static int overlaps_dim( KDT_DATA_TYPE pt_a[], KDT_DATA_TYPE pt_b[], KDT_DATA_TY
             return 0;
 
     return 1;
+}
+
+static void kdt_query_dim_func_util( kdtree *tree, kdt_node *node, KDT_DATA_TYPE point[], KDT_DATA_TYPE dim[], int depth, void ( *func )( void * ) )
+{
+    if ( node == NULL )
+        return;
+
+    int k = tree->k;
+    int axis = depth % k;
+
+    if ( overlaps_dim( node->point, point, dim, k ) )
+    {
+        func( node->item );
+        kdt_query_dim_func_util( tree, node->l, point, dim, depth + 1, func );
+        kdt_query_dim_func_util( tree, node->r, point, dim, depth + 1, func );
+    }
+    else if ( intersects_dim( node->point, point, dim, axis ) )
+    {
+        kdt_query_dim_func_util( tree, node->l, point, dim, depth + 1, func );
+        kdt_query_dim_func_util( tree, node->r, point, dim, depth + 1, func );
+    }
+    else
+    {
+        if ( point[ axis ] >= node->point[ axis ] )
+        {
+            kdt_query_dim_func_util( tree, node->r, point, dim, depth + 1, func );
+        }
+        else
+        {
+            kdt_query_dim_func_util( tree, node->l, point, dim, depth + 1, func );
+        }
+    }
+}
+
+void kdt_query_dim_func( kdtree *tree, KDT_DATA_TYPE point[], KDT_DATA_TYPE dim[], void ( *func )( void * ) )
+{
+    if ( tree == NULL )
+        return;
+
+    kdt_query_dim_func_util( tree, tree->root, point, dim, 0, func );
 }
 
 static int kdt_query_dim_util( kdtree *tree, kdt_node *node, KDT_DATA_TYPE point[], KDT_DATA_TYPE dim[], int depth, void ***query )
