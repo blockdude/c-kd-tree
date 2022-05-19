@@ -8,9 +8,7 @@
 #ifndef K_DIMENTIONAL_TREE
 #define K_DIMENTIONAL_TREE
 
-#ifndef KDT_DATA_TYPE
 #define KDT_DATA_TYPE int
-#endif
 
 typedef struct kdtree kdtree;
 
